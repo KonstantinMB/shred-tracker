@@ -26,21 +26,30 @@ let routesRegistered = false;
 async function ensureRoutes() {
   if (!routesRegistered) {
     await registerRoutes(httpServer, app);
+    app.use((err: unknown, _req: Request, res: Response, _next: () => void) => {
+      console.error("[API Error]", err);
+      res.status(500).json({ error: "Internal server error" });
+    });
     routesRegistered = true;
   }
 }
 
 // Vercel handler — rewrite sends path as ?path=:path*, restore req.url for Express
 export default async function handler(req: Request, res: Response) {
-  await ensureRoutes();
-  const url = new URL(req.url || "/", "http://localhost");
-  const pathParam = url.searchParams.get("path");
-  if (pathParam) {
-    const qs = [...url.searchParams.entries()]
-      .filter(([k]) => k !== "path")
-      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-      .join("&");
-    (req as Request & { url: string }).url = `/api/${pathParam}${qs ? `?${qs}` : ""}`;
+  try {
+    await ensureRoutes();
+    const url = new URL(req.url || "/", "http://localhost");
+    const pathParam = url.searchParams.get("path");
+    if (pathParam) {
+      const qs = [...url.searchParams.entries()]
+        .filter(([k]) => k !== "path")
+        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+        .join("&");
+      (req as Request & { url: string }).url = `/api/${pathParam}${qs ? `?${qs}` : ""}`;
+    }
+    app(req, res);
+  } catch (err) {
+    console.error("[API Handler Error]", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-  app(req, res);
 }
