@@ -1,10 +1,10 @@
 /**
  * Vercel Serverless Function entry point.
- * This wraps the Express app for deployment on Vercel.
+ * Bundled to api/index.js by the build script.
  *
  * All /api/* requests are routed here by vercel.json.
  */
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, Response } from "express";
 import { createServer } from "http";
 import { registerRoutes } from "../server/routes";
 
