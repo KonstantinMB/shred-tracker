@@ -30,8 +30,17 @@ async function ensureRoutes() {
   }
 }
 
-// Vercel handler
+// Vercel handler — rewrite sends path as ?path=:path*, restore req.url for Express
 export default async function handler(req: Request, res: Response) {
   await ensureRoutes();
+  const url = new URL(req.url || "/", "http://localhost");
+  const pathParam = url.searchParams.get("path");
+  if (pathParam) {
+    const qs = [...url.searchParams.entries()]
+      .filter(([k]) => k !== "path")
+      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+      .join("&");
+    (req as Request & { url: string }).url = `/api/${pathParam}${qs ? `?${qs}` : ""}`;
+  }
   app(req, res);
 }
