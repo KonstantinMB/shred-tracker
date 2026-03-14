@@ -18,6 +18,21 @@ function getStorage(): IStorage {
 }
 
 export async function registerRoutes(httpServer: Server, app: Express) {
+  // Health check — helps debug 500s (DB connection, missing tables)
+  app.get("/api/health", async (_req, res) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ ok: true, mode: "memory" });
+      }
+      const profile = await getStorage().getProfile();
+      res.json({ ok: true, db: "connected", profile: profile ? "exists" : "empty" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[health]", e);
+      res.status(500).json({ ok: false, error: msg });
+    }
+  });
+
   // Profile
   app.get("/api/profile", async (_req, res) => {
     const profile = await getStorage().getProfile();
