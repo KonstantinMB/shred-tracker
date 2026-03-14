@@ -2,8 +2,9 @@ import type { Express } from "express";
 import { Server } from "http";
 import { storage as memStorage, PgStorage } from "./storage";
 import {
-  insertWeightLogSchema, insertWorkoutLogSchema,
-  insertNutritionLogSchema, insertStrengthLogSchema
+  insertUserProfileSchema, insertWeightLogSchema, insertWorkoutLogSchema,
+  insertNutritionLogSchema, insertStrengthLogSchema,
+  insertExerciseSchema, insertExerciseLogSchema,
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -17,6 +18,46 @@ function getStorage(): IStorage {
 }
 
 export async function registerRoutes(httpServer: Server, app: Express) {
+  // Profile
+  app.get("/api/profile", async (_req, res) => {
+    const profile = await getStorage().getProfile();
+    res.json(profile);
+  });
+  app.patch("/api/profile", async (req, res) => {
+    const parsed = insertUserProfileSchema.partial().safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    res.json(await getStorage().upsertProfile(parsed.data));
+  });
+
+  // Exercises
+  app.get("/api/exercises", async (_req, res) => {
+    res.json(await getStorage().getExercises());
+  });
+  app.post("/api/exercises", async (req, res) => {
+    const parsed = insertExerciseSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    res.json(await getStorage().addExercise(parsed.data));
+  });
+  app.delete("/api/exercises/:id", async (req, res) => {
+    await getStorage().deleteExercise(Number(req.params.id));
+    res.json({ ok: true });
+  });
+
+  // Exercise logs (per-workout)
+  app.get("/api/exercise-logs", async (req, res) => {
+    const workoutId = req.query.workoutId ? Number(req.query.workoutId) : undefined;
+    res.json(await getStorage().getExerciseLogs(workoutId));
+  });
+  app.post("/api/exercise-logs", async (req, res) => {
+    const parsed = insertExerciseLogSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    res.json(await getStorage().addExerciseLog(parsed.data));
+  });
+  app.delete("/api/exercise-logs/:id", async (req, res) => {
+    await getStorage().deleteExerciseLog(Number(req.params.id));
+    res.json({ ok: true });
+  });
+
   // Weight logs
   app.get("/api/weight", async (_req, res) => {
     res.json(await getStorage().getWeightLogs());

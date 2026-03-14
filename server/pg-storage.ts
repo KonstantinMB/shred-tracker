@@ -5,9 +5,9 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "./db";
 import {
-  weightLogs, workoutLogs, nutritionLogs, strengthLogs,
-  WeightLog, WorkoutLog, NutritionLog, StrengthLog,
-  InsertWeightLog, InsertWorkoutLog, InsertNutritionLog, InsertStrengthLog,
+  userProfile, exercises, exerciseLogs, weightLogs, workoutLogs, nutritionLogs, strengthLogs,
+  UserProfile, Exercise, ExerciseLog, WeightLog, WorkoutLog, NutritionLog, StrengthLog,
+  InsertUserProfile, InsertExercise, InsertExerciseLog, InsertWeightLog, InsertWorkoutLog, InsertNutritionLog, InsertStrengthLog,
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -16,6 +16,74 @@ export class PgStorage implements IStorage {
     const d = getDb();
     if (!d) throw new Error("DATABASE_URL not set");
     return d;
+  }
+
+  // ── Profile ─────────────────────────────────────────────────
+  async getProfile(): Promise<UserProfile | null> {
+    const [row] = await this.db.select().from(userProfile).limit(1);
+    return row ?? null;
+  }
+  async upsertProfile(data: Partial<InsertUserProfile>): Promise<UserProfile> {
+    const existing = await this.getProfile();
+    if (existing) {
+      const [row] = await this.db.update(userProfile).set(data).where(eq(userProfile.id, existing.id)).returning();
+      return row!;
+    }
+    const [row] = await this.db.insert(userProfile).values({
+      name: data.name ?? "",
+      startDate: data.startDate ?? "2026-03-01",
+      startWeight: data.startWeight ?? 94,
+      goalWeight: data.goalWeight ?? 84,
+      goalMonths: data.goalMonths ?? 12,
+      estimatedBodyFat: data.estimatedBodyFat ?? null,
+      caloriesTarget: data.caloriesTarget ?? 2500,
+      proteinTarget: data.proteinTarget ?? 210,
+      carbsTarget: data.carbsTarget ?? 240,
+      fatTarget: data.fatTarget ?? 78,
+      stepsTarget: data.stepsTarget ?? 10000,
+      waterTarget: data.waterTarget ?? 3,
+      sleepTarget: data.sleepTarget ?? 8,
+      location: data.location ?? "",
+    }).returning();
+    return row!;
+  }
+
+  // ── Exercises ───────────────────────────────────────────────
+  async getExercises(): Promise<Exercise[]> {
+    return this.db.select().from(exercises).orderBy(exercises.name);
+  }
+  async addExercise(exercise: InsertExercise): Promise<Exercise> {
+    const [row] = await this.db.insert(exercises).values({
+      name: exercise.name,
+      category: exercise.category ?? "compound",
+      unit: exercise.unit ?? "kg",
+    }).returning();
+    return row;
+  }
+  async deleteExercise(id: number): Promise<void> {
+    await this.db.delete(exerciseLogs).where(eq(exerciseLogs.exerciseId, id));
+    await this.db.delete(exercises).where(eq(exercises.id, id));
+  }
+
+  async getExerciseLogs(workoutId?: number): Promise<ExerciseLog[]> {
+    if (workoutId != null) {
+      return this.db.select().from(exerciseLogs).where(eq(exerciseLogs.workoutId, workoutId)).orderBy(exerciseLogs.id);
+    }
+    return this.db.select().from(exerciseLogs).orderBy(exerciseLogs.id);
+  }
+  async addExerciseLog(log: InsertExerciseLog): Promise<ExerciseLog> {
+    const [row] = await this.db.insert(exerciseLogs).values({
+      workoutId: log.workoutId,
+      exerciseId: log.exerciseId,
+      sets: log.sets ?? 1,
+      reps: log.reps ?? null,
+      weight: log.weight ?? null,
+      notes: log.notes ?? null,
+    }).returning();
+    return row;
+  }
+  async deleteExerciseLog(id: number): Promise<void> {
+    await this.db.delete(exerciseLogs).where(eq(exerciseLogs.id, id));
   }
 
   // ── Weight ──────────────────────────────────────────────────

@@ -1,9 +1,24 @@
 import {
-  WeightLog, WorkoutLog, NutritionLog, StrengthLog,
-  InsertWeightLog, InsertWorkoutLog, InsertNutritionLog, InsertStrengthLog
+  UserProfile, WeightLog, WorkoutLog, NutritionLog, StrengthLog, Exercise, ExerciseLog,
+  InsertUserProfile, InsertWeightLog, InsertWorkoutLog, InsertNutritionLog, InsertStrengthLog,
+  InsertExercise, InsertExerciseLog,
 } from "@shared/schema";
 
 export interface IStorage {
+  // Profile
+  getProfile(): Promise<UserProfile | null>;
+  upsertProfile(profile: Partial<InsertUserProfile>): Promise<UserProfile>;
+
+  // Exercises
+  getExercises(): Promise<Exercise[]>;
+  addExercise(exercise: InsertExercise): Promise<Exercise>;
+  deleteExercise(id: number): Promise<void>;
+
+  // Exercise logs (per-workout)
+  getExerciseLogs(workoutId?: number): Promise<ExerciseLog[]>;
+  addExerciseLog(log: InsertExerciseLog): Promise<ExerciseLog>;
+  deleteExerciseLog(id: number): Promise<void>;
+
   // Weight
   getWeightLogs(): Promise<WeightLog[]>;
   addWeightLog(log: InsertWeightLog): Promise<WeightLog>;
@@ -26,7 +41,32 @@ export interface IStorage {
   deleteStrengthLog(id: number): Promise<void>;
 }
 
+const DEFAULT_PROFILE: UserProfile = {
+  id: 1,
+  name: "Konstantin",
+  startDate: "2026-03-01",
+  startWeight: 94,
+  goalWeight: 84,
+  goalMonths: 12,
+  estimatedBodyFat: null,
+  caloriesTarget: 2500,
+  proteinTarget: 210,
+  carbsTarget: 240,
+  fatTarget: 78,
+  stepsTarget: 10000,
+  waterTarget: 3,
+  sleepTarget: 8,
+  location: "Sofia, BG",
+};
+
 export class MemStorage implements IStorage {
+  private profile: UserProfile = { ...DEFAULT_PROFILE };
+  private exercises: Exercise[] = [
+    { id: 1, name: "Bench Press", category: "compound", unit: "kg" },
+    { id: 2, name: "Barbell Row", category: "compound", unit: "kg" },
+    { id: 3, name: "Leg Press", category: "compound", unit: "kg" },
+  ];
+  private exerciseLogs: ExerciseLog[] = [];
   private weightLogs: WeightLog[] = [];
   private workoutLogs: WorkoutLog[] = [];
   private nutritionLogs: NutritionLog[] = [];
@@ -34,6 +74,41 @@ export class MemStorage implements IStorage {
   private nextId = 1;
 
   private getId() { return this.nextId++; }
+
+  async getProfile(): Promise<UserProfile | null> {
+    return { ...this.profile };
+  }
+  async upsertProfile(data: Partial<InsertUserProfile>): Promise<UserProfile> {
+    this.profile = { ...this.profile, ...data, id: 1 };
+    return { ...this.profile };
+  }
+
+  async getExercises(): Promise<Exercise[]> {
+    return [...this.exercises];
+  }
+  async addExercise(exercise: InsertExercise): Promise<Exercise> {
+    const entry = { ...exercise, id: this.nextId++, category: exercise.category ?? "compound", unit: exercise.unit ?? "kg" };
+    this.exercises.push(entry);
+    return entry;
+  }
+  async deleteExercise(id: number): Promise<void> {
+    this.exercises = this.exercises.filter((e) => e.id !== id);
+    this.exerciseLogs = this.exerciseLogs.filter((e) => e.exerciseId !== id);
+  }
+
+  async getExerciseLogs(workoutId?: number): Promise<ExerciseLog[]> {
+    let list = [...this.exerciseLogs];
+    if (workoutId != null) list = list.filter((e) => e.workoutId === workoutId);
+    return list.sort((a, b) => a.id - b.id);
+  }
+  async addExerciseLog(log: InsertExerciseLog): Promise<ExerciseLog> {
+    const entry = { ...log, id: this.nextId++, sets: log.sets ?? 1, reps: log.reps ?? null, weight: log.weight ?? null, notes: log.notes ?? null };
+    this.exerciseLogs.push(entry);
+    return entry;
+  }
+  async deleteExerciseLog(id: number): Promise<void> {
+    this.exerciseLogs = this.exerciseLogs.filter((e) => e.id !== id);
+  }
 
   constructor() {
     // ── Seed 28 days of weight data (reverse: oldest first, ending at today Mar 12 2026)
@@ -46,7 +121,6 @@ export class MemStorage implements IStorage {
         id: this.getId(),
         date: d.toISOString().split("T")[0],
         weight: w,
-        waist: parseFloat((88 - i * 0.1).toFixed(1)),
         notes: null
       });
     });
@@ -106,7 +180,7 @@ export class MemStorage implements IStorage {
 
   async getWeightLogs() { return [...this.weightLogs].sort((a, b) => a.date.localeCompare(b.date)); }
   async addWeightLog(log: InsertWeightLog): Promise<WeightLog> {
-    const entry = { ...log, id: this.getId(), waist: log.waist ?? null, notes: log.notes ?? null };
+    const entry = { ...log, id: this.getId(), notes: log.notes ?? null };
     this.weightLogs.push(entry);
     return entry;
   }

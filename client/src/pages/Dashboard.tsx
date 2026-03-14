@@ -24,14 +24,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useProfile } from "@/hooks/useProfile";
 import type { WeightLog, NutritionLog, WorkoutLog } from "@shared/schema";
-
-// ─── helpers ───────────────────────────────────────────────────────────────
-const WEIGHT_TARGET = 84;
-const WEIGHT_START = 94;
-const CALORIES_TARGET = 2500;
-const PROTEIN_TARGET = 210;
-const STEPS_TARGET = 10000;
 
 function delta(val: number | undefined, target: number) {
   if (!val) return null;
@@ -145,9 +139,19 @@ function WeightTooltip({ active, payload, label }: any) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
+  const { profile, targets, weightTargets } = useProfile();
   const { data: weightLogs = [] } = useQuery<WeightLog[]>({ queryKey: ["/api/weight"] });
   const { data: nutritionLogs = [] } = useQuery<NutritionLog[]>({ queryKey: ["/api/nutrition"] });
   const { data: workoutLogs = [] } = useQuery<WorkoutLog[]>({ queryKey: ["/api/workouts"] });
+
+  const { start: WEIGHT_START, goal: WEIGHT_TARGET, months: goalMonths } = weightTargets;
+  const CALORIES_TARGET = targets.calories;
+  const STEPS_TARGET = targets.steps;
+  const totalDays = goalMonths * 30;
+  const startDate = parseISO(profile.startDate);
+  const daysSinceStart = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const currentWeek = Math.max(1, Math.floor(daysSinceStart / 7) + 1);
+  const weeksRemaining = Math.max(0, goalMonths * 4 - currentWeek);
 
   // Current weight (latest)
   const sortedWeight = [...weightLogs].sort((a, b) => b.date.localeCompare(a.date));
@@ -194,7 +198,7 @@ export default function Dashboard() {
           WEIGHT_START -
           ((WEIGHT_START - WEIGHT_TARGET) *
             (weightLogs.length - sortedWeight.indexOf(w) - 1)) /
-            84
+            totalDays
         ).toFixed(1)
       ),
     }));
@@ -213,9 +217,9 @@ export default function Dashboard() {
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="fade-slide-up pt-1">
-        <h1 className="text-xl font-bold text-foreground">Good evening, Konstantin</h1>
+        <h1 className="text-xl font-bold text-foreground">Good evening, {profile.name || "there"}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          {format(new Date(), "EEEE, d MMMM yyyy")} · Summer Shred Week 4
+          {format(new Date(), "EEEE, d MMMM yyyy")} · Summer Shred Week {currentWeek}
         </p>
       </div>
 
@@ -426,7 +430,7 @@ export default function Dashboard() {
         {[
           { label: "Lost so far", value: latestWeight ? `${(WEIGHT_START - latestWeight).toFixed(1)} kg` : "—", icon: TrendingDown, color: "text-green-400" },
           { label: "Total workouts", value: workoutLogs.length, icon: Dumbbell, color: "text-primary" },
-          { label: "Weeks remaining", value: `${Math.max(0, 12 - 4)}`, icon: Zap, color: "text-warning" },
+          { label: "Weeks remaining", value: `${weeksRemaining}`, icon: Zap, color: "text-warning" },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="glow-border rounded-xl bg-card p-4 flex items-center gap-3" data-testid={`stat-${label.replace(/\s+/g, "-").toLowerCase()}`}>
             <div className="p-2 rounded-lg bg-primary/10">

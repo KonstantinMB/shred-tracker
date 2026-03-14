@@ -102,6 +102,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+
   /* Prevent text selection on buttons/interactive elements */
   button, [role="button"] {
     user-select: none;

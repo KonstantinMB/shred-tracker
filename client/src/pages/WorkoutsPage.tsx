@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import type { WorkoutLog } from "@shared/schema";
+import type { WorkoutLog, Exercise } from "@shared/schema";
 
 const WORKOUT_TYPES = ["gym", "tennis", "jump_rope", "recovery"] as const;
 const typeLabels: Record<string, string> = { gym: "Gym", tennis: "Tennis", jump_rope: "Jump Rope", recovery: "Recovery" };
@@ -112,16 +112,41 @@ export default function WorkoutsPage() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("gym");
+  const [exerciseRows, setExerciseRows] = useState<{ exerciseId: number; sets: number; reps: number; weight: number }[]>([]);
 
   const { data: logs = [], isLoading } = useQuery<WorkoutLog[]>({ queryKey: ["/api/workouts"] });
+  const { data: exercises = [] } = useQuery<Exercise[]>({ queryKey: ["/api/exercises"] });
+  const { data: exerciseLogs = [] } = useQuery<import("@shared/schema").ExerciseLog[]>({ queryKey: ["/api/exercise-logs"] });
   const sortedLogs = [...logs].sort((a, b) => b.date.localeCompare(a.date));
 
   const addMutation = useMutation({
-    mutationFn: (data: FormValues) => apiRequest("POST", "/api/workouts", data),
+    mutationFn: async (data: FormValues & { exerciseRows?: { exerciseId: number; sets: number; reps: number; weight: number }[] }) => {
+      const res = await fetch("/api/workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: data.date, type: data.type, durationMin: data.durationMin, energyRating: data.energyRating, notes: data.notes }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const workout = await res.json();
+      if (data.type === "gym" && data.exerciseRows?.length) {
+        for (const row of data.exerciseRows) {
+          if (row.exerciseId && (row.reps || row.weight)) {
+            await fetch("/api/exercise-logs", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ workoutId: workout.id, exerciseId: row.exerciseId, sets: row.sets || 1, reps: row.reps || null, weight: row.weight || null }),
+            });
+          }
+        }
+      }
+      return workout;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workouts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/exercise-logs"] });
       toast({ title: "Workout logged", description: "Session saved." });
       setShowForm(false);
+      setExerciseRows([]);
       reset();
     },
     onError: () => toast({ title: "Error", description: "Failed to save.", variant: "destructive" }),
@@ -137,7 +162,17 @@ export default function WorkoutsPage() {
     defaultValues: { date: format(new Date(), "yyyy-MM-dd"), type: "gym", durationMin: 60, energyRating: 7 },
   });
 
-  const onSubmit = (data: FormValues) => addMutation.mutate(data);
+  const onSubmit = (data: FormValues) => addMutation.mutate({ ...data, exerciseRows: selectedType === "gym" ? exerciseRows : [] });
+
+  const logsByWorkout = (exerciseLogs as { id: number; workoutId: number; exerciseId: number; sets: number; reps: number | null; weight: number | null }[]).reduce(
+    (acc, el) => {
+      if (!acc[el.workoutId]) acc[el.workoutId] = [];
+      acc[el.workoutId].push(el);
+      return acc;
+    },
+    {} as Record<number, { id: number; workoutId: number; exerciseId: number; sets: number; reps: number | null; weight: number | null }[]>
+  );
+  const getExerciseName = (id: number) => exercises.find((e) => e.id === id)?.name ?? "?";
 
   // Stats
   const totalWorkouts = logs.length;
@@ -201,6 +236,45 @@ export default function WorkoutsPage() {
               <Label className="text-xs">Notes (optional)</Label>
               <Input placeholder="Chest + triceps, hit new bench PR..." data-testid="input-notes" {...register("notes")} className="bg-secondary border-border" />
             </div>
+            {selectedType === "gym" && exercises.length > 0 && (
+              <div className="space-y-3 pt-2 border-t border-border">
+                <Label className="text-xs">Exercises (optional)</Label>
+                {exerciseRows.map((row, i) => (
+                  <div key={i} className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Exercise</Label>
+                      <Select
+                        value={String(row.exerciseId)}
+                        onValueChange={(v) => setExerciseRows((prev) => prev.map((r, j) => (j === i ? { ...r, exerciseId: Number(v) } : r)))}
+                      >
+                        <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {exercises.map((e) => (
+                            <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Sets</Label>
+                      <Input type="number" min={1} value={row.sets} onChange={(e) => setExerciseRows((prev) => prev.map((r, j) => (j === i ? { ...r, sets: Number(e.target.value) || 1 } : r)))} className="bg-secondary border-border" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Reps</Label>
+                      <Input type="number" value={row.reps || ""} onChange={(e) => setExerciseRows((prev) => prev.map((r, j) => (j === i ? { ...r, reps: Number(e.target.value) || 0 } : r)))} placeholder="8" className="bg-secondary border-border" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Weight (kg)</Label>
+                      <Input type="number" step="2.5" value={row.weight || ""} onChange={(e) => setExerciseRows((prev) => prev.map((r, j) => (j === i ? { ...r, weight: Number(e.target.value) || 0 } : r)))} placeholder="80" className="bg-secondary border-border" />
+                    </div>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setExerciseRows((prev) => prev.filter((_, j) => j !== i))}>Remove</Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" size="sm" onClick={() => setExerciseRows((prev) => [...prev, { exerciseId: exercises[0]?.id ?? 0, sets: 3, reps: 8, weight: 0 }])}>
+                  + Add exercise
+                </Button>
+              </div>
+            )}
             <div className="flex gap-3">
               <Button type="submit" data-testid="button-submit-workout" disabled={addMutation.isPending} size="sm">
                 {addMutation.isPending ? "Saving..." : "Save Session"}
@@ -269,6 +343,15 @@ export default function WorkoutsPage() {
                   </div>
                   {log.notes && (
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">{log.notes}</p>
+                  )}
+                  {log.type === "gym" && logsByWorkout[log.id]?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {logsByWorkout[log.id].map((el) => (
+                        <span key={el.id} className="text-xs text-muted-foreground bg-secondary/60 px-1.5 py-0.5 rounded">
+                          {getExerciseName(el.exerciseId)}: {el.sets}x{el.reps ?? "?"} @ {el.weight ?? "?"}kg
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
                 <button

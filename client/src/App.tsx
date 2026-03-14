@@ -9,6 +9,7 @@ import WeightPage from "@/pages/WeightPage";
 import NutritionPage from "@/pages/NutritionPage";
 import WorkoutsPage from "@/pages/WorkoutsPage";
 import StrengthPage from "@/pages/StrengthPage";
+import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
               <Route path="/nutrition" component={NutritionPage} />
               <Route path="/workouts" component={WorkoutsPage} />
               <Route path="/strength" component={StrengthPage} />
+              <Route path="/profile" component={ProfilePage} />
               <Route component={NotFound} />
             </Switch>
           </main>

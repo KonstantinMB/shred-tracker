@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
+import { useProfile } from "@/hooks/useProfile";
 import {
   LayoutDashboard,
   Weight,
@@ -10,6 +11,7 @@ import {
   Flame,
   Menu,
   X,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +21,47 @@ const navItems = [
   { href: "/nutrition", label: "Nutrition", icon: Utensils },
   { href: "/workouts", label: "Workouts", icon: Dumbbell },
   { href: "/strength", label: "Strength", icon: TrendingUp },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
-const SidebarContent = ({
+function SidebarFooter() {
+  const { profile, targets } = useProfile();
+  return (
+    <div className="px-6 py-4 border-t border-border">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Flame className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+        <span>{targets.calories.toLocaleString()} kcal · {targets.protein}g protein</span>
+      </div>
+      <div className="mt-1 text-xs text-muted-foreground">{profile.location || "Set location in Profile"}</div>
+    </div>
+  );
+}
+
+function SidebarProfile() {
+  const { profile, targets, weightTargets } = useProfile();
+  const { start, goal, months } = weightTargets;
+  const startDate = profile.startDate ? new Date(profile.startDate) : new Date();
+  const daysSinceStart = Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const currentWeek = Math.max(1, Math.floor(daysSinceStart / 7) + 1);
+  const progressPct = months > 0 ? Math.min(100, (currentWeek / (months * 4)) * 100) : 0;
+  return (
+    <div className="px-6 py-4 border-b border-border">
+      <div className="flex justify-between text-xs text-muted-foreground mb-2">
+        <span>Progress</span>
+        <span>Week {currentWeek} / {months * 4}</span>
+      </div>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div className="h-full bg-primary rounded-full fill-animate transition-all duration-500" style={{ width: `${progressPct}%` }} />
+      </div>
+      <div className="flex justify-between text-xs mt-2">
+        <span className="text-muted-foreground">{start} kg</span>
+        <span className="text-primary font-medium">→ {goal} kg</span>
+      </div>
+    </div>
+  );
+}
+
+function SidebarContent({
   location,
   isActive,
   onNavClick,
@@ -29,7 +69,9 @@ const SidebarContent = ({
   location: string;
   isActive: (href: string) => boolean;
   onNavClick?: () => void;
-}) => (
+}) {
+  const { profile } = useProfile();
+  return (
   <>
     {/* Logo */}
     <div className="px-6 py-5 border-b border-border">
@@ -54,26 +96,13 @@ const SidebarContent = ({
         </div>
         <div>
           <div className="text-sm font-bold text-foreground leading-tight">SUMMER SHRED</div>
-          <div className="text-xs text-muted-foreground">Konstantin · 12 Weeks</div>
+          <div className="text-xs text-muted-foreground">{profile.name || "You"} · {profile.goalMonths || 12} Weeks</div>
         </div>
       </div>
     </div>
 
-    {/* Progress bar */}
-    <div className="px-6 py-4 border-b border-border">
-      <div className="flex justify-between text-xs text-muted-foreground mb-2">
-        <span>Progress</span>
-        <span>Week 4 / 12</span>
-      </div>
-      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-        <div className="h-full bg-primary rounded-full fill-animate" style={{ width: "33%" }} />
-      </div>
-      <div className="flex justify-between text-xs mt-2">
-        <span className="text-muted-foreground">94 kg</span>
-        <span className="text-primary font-medium">~88 kg now</span>
-        <span className="text-muted-foreground">84 kg</span>
-      </div>
-    </div>
+    {/* Progress bar - uses profile via SidebarProfile */}
+    <SidebarProfile />
 
     {/* Nav items */}
     <nav className="flex-1 px-3 py-4 space-y-1" data-testid="sidebar-nav">
@@ -96,16 +125,11 @@ const SidebarContent = ({
       ))}
     </nav>
 
-    {/* Bottom */}
-    <div className="px-6 py-4 border-t border-border">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Flame className="w-3.5 h-3.5 text-warning flex-shrink-0" />
-        <span>2,500 kcal · 210g protein</span>
-      </div>
-      <div className="mt-1 text-xs text-muted-foreground">Mar → Jun 2026 · Sofia, BG</div>
-    </div>
+    {/* Bottom - uses profile */}
+    <SidebarFooter />
   </>
-);
+  );
+}
 
 export default function Sidebar() {
   const [location] = useHashLocation();

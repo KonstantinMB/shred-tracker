@@ -21,9 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 import type { NutritionLog } from "@shared/schema";
-
-const TARGETS = { calories: 2500, protein: 210, carbs: 240, fat: 78, steps: 10000, water: 3.0, sleep: 8 };
 
 const formSchema = z.object({
   date: z.string().min(1, "Date required"),
@@ -75,8 +74,10 @@ function MacroBar({ label, value, target, color, unit = "g" }: { label: string; 
 export default function NutritionPage() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  const { targets } = useProfile();
 
   const { data: logs = [], isLoading } = useQuery<NutritionLog[]>({ queryKey: ["/api/nutrition"] });
+  const { data: weightLogs = [] } = useQuery<import("@shared/schema").WeightLog[]>({ queryKey: ["/api/weight"] });
 
   const sortedLogs = [...logs].sort((a, b) => b.date.localeCompare(a.date));
   const last7 = sortedLogs.slice(0, 7).reverse();
@@ -101,8 +102,8 @@ export default function NutritionPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       date: format(new Date(), "yyyy-MM-dd"),
-      calories: 2500, protein: 210, carbs: 240, fat: 78,
-      steps: 10000, water: 3.0, sleep: 8,
+      calories: targets.calories, protein: targets.protein, carbs: targets.carbs, fat: targets.fat,
+      steps: targets.steps, water: targets.water, sleep: targets.sleep,
     },
   });
 
@@ -130,6 +131,14 @@ export default function NutritionPage() {
   const today = format(new Date(), "yyyy-MM-dd");
   const todayLog = sortedLogs.find((l) => l.date === today);
 
+  // Nutrition vs Weight — 7-day avg calories + weight change for insight
+  const sortedWeight = [...weightLogs].sort((a, b) => a.date.localeCompare(b.date));
+  const avgCalLast7 = last7.length ? Math.round(last7.reduce((s, l) => s + l.calories, 0) / last7.length) : null;
+  const last7Weights = sortedWeight.slice(-7);
+  const weightDeltaLast7 = last7Weights.length >= 2
+    ? (last7Weights[last7Weights.length - 1]?.weight ?? 0) - (last7Weights[0]?.weight ?? 0)
+    : null;
+
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
       {/* Header */}
@@ -138,7 +147,9 @@ export default function NutritionPage() {
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Utensils className="w-5 h-5 text-primary" /> Nutrition Tracker
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Target: 2,500 kcal · 210g protein · 240g carbs · 78g fat</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Target: {targets.calories.toLocaleString()} kcal · {targets.protein}g protein · {targets.carbs}g carbs · {targets.fat}g fat
+          </p>
         </div>
         <Button data-testid="button-log-nutrition" onClick={() => setShowForm(!showForm)} size="sm" className="gap-2">
           <Plus className="w-4 h-4" /> Log Nutrition
@@ -202,15 +213,15 @@ export default function NutritionPage() {
         <h2 className="text-sm font-semibold text-foreground mb-4">Today's Progress</h2>
         {todayLog ? (
           <div className="space-y-3">
-            <MacroBar label="Calories" value={todayLog.calories} target={TARGETS.calories} color="hsl(38,90%,55%)" unit=" kcal" />
-            <MacroBar label="Protein" value={todayLog.protein} target={TARGETS.protein} color="hsl(186,90%,42%)" />
-            <MacroBar label="Carbs" value={todayLog.carbs} target={TARGETS.carbs} color="hsl(262,83%,68%)" />
-            <MacroBar label="Fat" value={todayLog.fat} target={TARGETS.fat} color="hsl(0,72%,51%)" />
+            <MacroBar label="Calories" value={todayLog.calories} target={targets.calories} color="hsl(38,90%,55%)" unit=" kcal" />
+            <MacroBar label="Protein" value={todayLog.protein} target={targets.protein} color="hsl(186,90%,42%)" />
+            <MacroBar label="Carbs" value={todayLog.carbs} target={targets.carbs} color="hsl(262,83%,68%)" />
+            <MacroBar label="Fat" value={todayLog.fat} target={targets.fat} color="hsl(0,72%,51%)" />
             <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border mt-3">
               {[
-                { label: "Steps", value: todayLog.steps?.toLocaleString() ?? "—", target: "10,000", icon: "👟", color: "text-purple-400" },
-                { label: "Water", value: todayLog.water ? `${todayLog.water}L` : "—", target: "3.0L", icon: "💧", color: "text-primary" },
-                { label: "Sleep", value: todayLog.sleep ? `${todayLog.sleep}h` : "—", target: "8h", icon: "🌙", color: "text-warning" },
+                { label: "Steps", value: todayLog.steps?.toLocaleString() ?? "—", target: targets.steps.toLocaleString(), icon: "👟", color: "text-purple-400" },
+                { label: "Water", value: todayLog.water ? `${todayLog.water}L` : "—", target: `${targets.water}L`, icon: "💧", color: "text-primary" },
+                { label: "Sleep", value: todayLog.sleep ? `${todayLog.sleep}h` : "—", target: `${targets.sleep}h`, icon: "🌙", color: "text-warning" },
               ].map(({ label, value, target, icon, color }) => (
                 <div key={label} className="text-center">
                   <div className="text-lg mb-1">{icon}</div>
@@ -242,13 +253,13 @@ export default function NutritionPage() {
             <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} />
             <YAxis tick={{ fontSize: 10, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} domain={[0, 3200]} />
             <Tooltip content={<NutritionTooltip />} />
-            <ReferenceLine y={TARGETS.calories} stroke="hsl(38,90%,55%)" strokeDasharray="4 4" label={{ value: "Target", position: "right", fontSize: 9, fill: "hsl(38,90%,55%)" }} />
+            <ReferenceLine y={targets.calories} stroke="hsl(38,90%,55%)" strokeDasharray="4 4" label={{ value: "Target", position: "right", fontSize: 9, fill: "hsl(38,90%,55%)" }} />
             <Bar dataKey="Calories" radius={[4, 4, 0, 0]} animationDuration={800}>
               {chartData.map((entry, i) => (
                 <Cell
                   key={i}
                   fill={
-                    entry.Calories <= TARGETS.calories
+                    entry.Calories <= targets.calories
                       ? "hsl(186,90%,42%)"
                       : "hsl(0,72%,51%)"
                   }
@@ -274,11 +285,58 @@ export default function NutritionPage() {
           </BarChart>
         </ResponsiveContainer>
         <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded bg-primary" />Protein (210g target)</div>
-          <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded bg-purple-400" />Carbs (240g target)</div>
-          <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded bg-red-400" />Fat (78g target)</div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded bg-primary" />Protein ({targets.protein}g target)</div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded bg-purple-400" />Carbs ({targets.carbs}g target)</div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded bg-red-400" />Fat ({targets.fat}g target)</div>
         </div>
       </div>
+
+      {/* 7-Day Sleep chart */}
+      {last7.some((l) => l.sleep != null) && (
+        <div className="glow-border rounded-xl bg-card p-5 fade-slide-up stagger-3" data-testid="sleep-chart">
+          <h2 className="text-sm font-semibold text-foreground mb-4">7-Day Sleep</h2>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart
+              data={last7.map((l) => ({ date: format(parseISO(l.date), "EEE"), Sleep: l.sleep ?? 0 }))}
+              margin={{ top: 4, right: 8, bottom: 0, left: -16 }}
+              barSize={24}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,10%,15%)" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} domain={[0, 12]} />
+              <Tooltip
+                content={({ active, payload, label }) =>
+                  active && payload?.length ? (
+                    <div className="bg-card border border-border rounded-lg p-3 text-xs shadow-xl">
+                      <p className="text-muted-foreground mb-1">{label}</p>
+                      <p className="font-semibold text-warning">{payload[0]?.value} hrs</p>
+                      <p className="text-muted-foreground text-xs">Target: {targets.sleep} hrs</p>
+                    </div>
+                  ) : null
+                }
+              />
+              <ReferenceLine y={targets.sleep} stroke="hsl(38,90%,55%)" strokeDasharray="4 4" />
+              <Bar dataKey="Sleep" fill="hsl(262,83%,68%)" radius={[4, 4, 0, 0]} animationDuration={800} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Nutrition vs Weight insight */}
+      {avgCalLast7 !== null && weightDeltaLast7 !== null && (
+        <div className="glow-border rounded-xl bg-card p-5 fade-slide-up stagger-3" data-testid="nutrition-weight-insight">
+          <h2 className="text-sm font-semibold text-foreground mb-2">Nutrition vs Weight</h2>
+          <p className="text-sm text-muted-foreground">
+            When you averaged <span className="text-warning font-semibold">{avgCalLast7} kcal</span> over the last 7 days,
+            your weight changed by <span className={weightDeltaLast7 < 0 ? "text-green-400 font-semibold" : weightDeltaLast7 > 0 ? "text-red-400 font-semibold" : "text-foreground font-semibold"}>
+              {weightDeltaLast7 > 0 ? "+" : ""}{weightDeltaLast7.toFixed(1)} kg
+            </span>.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Target: {targets.calories} kcal — you&apos;re {avgCalLast7 <= targets.calories ? "under" : "over"} by {Math.abs(avgCalLast7 - targets.calories)} kcal on average.
+          </p>
+        </div>
+      )}
 
       {/* Weekly averages */}
       {weeklyAvg && (
@@ -286,11 +344,11 @@ export default function NutritionPage() {
           <h2 className="text-sm font-semibold text-foreground mb-3">7-Day Averages vs Targets</h2>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: "Calories", avg: weeklyAvg.calories, target: TARGETS.calories, unit: "kcal", color: "text-warning" },
-              { label: "Protein", avg: weeklyAvg.protein, target: TARGETS.protein, unit: "g", color: "text-primary" },
-              { label: "Carbs", avg: weeklyAvg.carbs, target: TARGETS.carbs, unit: "g", color: "text-purple-400" },
-              { label: "Fat", avg: weeklyAvg.fat, target: TARGETS.fat, unit: "g", color: "text-red-400" },
-              { label: "Steps", avg: weeklyAvg.steps, target: TARGETS.steps, unit: "", color: "text-green-400" },
+              { label: "Calories", avg: weeklyAvg.calories, target: targets.calories, unit: "kcal", color: "text-warning" },
+              { label: "Protein", avg: weeklyAvg.protein, target: targets.protein, unit: "g", color: "text-primary" },
+              { label: "Carbs", avg: weeklyAvg.carbs, target: targets.carbs, unit: "g", color: "text-purple-400" },
+              { label: "Fat", avg: weeklyAvg.fat, target: targets.fat, unit: "g", color: "text-red-400" },
+              { label: "Steps", avg: weeklyAvg.steps, target: targets.steps, unit: "", color: "text-green-400" },
             ].map(({ label, avg, target, unit, color }) => {
               const pct = Math.round((avg / target) * 100);
               const ok = pct >= 90 && pct <= 110;

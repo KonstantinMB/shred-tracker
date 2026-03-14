@@ -16,20 +16,18 @@ import { Plus, Trash2, Scale, TrendingDown, Target } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 import type { WeightLog } from "@shared/schema";
-
-const WEIGHT_START = 94;
-const WEIGHT_TARGET = 84;
 
 const formSchema = z.object({
   date: z.string().min(1, "Date required"),
   weight: z.coerce.number().min(50).max(200),
-  waist: z.coerce.number().min(50).max(200).optional(),
+  notes: z.string().optional(),
 });
 type FormValues = z.infer<typeof formSchema>;
 
@@ -40,7 +38,7 @@ function WeightTooltip({ active, payload, label }: any) {
       <p className="text-muted-foreground mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} style={{ color: p.color }} className="font-semibold">
-          {p.name}: {p.value} {p.name === "Waist" ? "cm" : "kg"}
+          {p.name}: {p.value} kg
         </p>
       ))}
     </div>
@@ -50,6 +48,9 @@ function WeightTooltip({ active, payload, label }: any) {
 export default function WeightPage() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  const { weightTargets } = useProfile();
+  const { start, goal, months } = weightTargets;
+  const totalDays = months * 30;
 
   const { data: logs = [], isLoading } = useQuery<WeightLog[]>({ queryKey: ["/api/weight"] });
 
@@ -76,28 +77,29 @@ export default function WeightPage() {
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { date: format(new Date(), "yyyy-MM-dd"), weight: undefined, waist: undefined },
+    defaultValues: { date: format(new Date(), "yyyy-MM-dd"), weight: undefined, notes: "" },
   });
 
   const onSubmit = (data: FormValues) => addMutation.mutate(data);
 
-  // Chart data
+  // Chart data — projected line from start to goal over goal_months
   const chartData = sortedLogs
-    .slice(0, 84)
+    .slice(0, Math.max(84, totalDays))
     .reverse()
-    .map((w) => ({
-      date: format(parseISO(w.date), "MMM d"),
-      Actual: w.weight,
-      Waist: w.waist ?? null,
-      Projected: parseFloat(
-        (WEIGHT_START - ((WEIGHT_START - WEIGHT_TARGET) * sortedLogs.indexOf(w)) / 84).toFixed(1)
-      ),
-    }));
+    .map((w) => {
+      const idx = sortedLogs.indexOf(w);
+      const projected = start - ((start - goal) * idx) / totalDays;
+      return {
+        date: format(parseISO(w.date), "MMM d"),
+        Actual: w.weight,
+        Projected: parseFloat(projected.toFixed(1)),
+      };
+    });
 
   const latestWeight = sortedLogs[0]?.weight;
-  const lostKg = latestWeight ? (WEIGHT_START - latestWeight).toFixed(1) : "0";
-  const remainingKg = latestWeight ? (latestWeight - WEIGHT_TARGET).toFixed(1) : "—";
-  const progressPct = latestWeight ? Math.round(((WEIGHT_START - latestWeight) / (WEIGHT_START - WEIGHT_TARGET)) * 100) : 0;
+  const lostKg = latestWeight ? (start - latestWeight).toFixed(1) : "0";
+  const remainingKg = latestWeight ? (latestWeight - goal).toFixed(1) : "—";
+  const progressPct = latestWeight ? Math.round(((start - latestWeight) / (start - goal)) * 100) : 0;
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
@@ -123,44 +125,44 @@ export default function WeightPage() {
       {showForm && (
         <div className="glow-border rounded-xl bg-card p-5 fade-slide-up" data-testid="weight-form">
           <h2 className="text-sm font-semibold text-foreground mb-4">New Weight Entry</h2>
-          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="weight-date" className="text-xs">Date</Label>
-              <Input
-                id="weight-date"
-                type="date"
-                data-testid="input-date"
-                {...register("date")}
-                className="bg-secondary border-border"
-              />
-              {errors.date && <p className="text-xs text-red-400">{errors.date.message}</p>}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="weight-date" className="text-xs">Date</Label>
+                <Input
+                  id="weight-date"
+                  type="date"
+                  data-testid="input-date"
+                  {...register("date")}
+                  className="bg-secondary border-border"
+                />
+                {errors.date && <p className="text-xs text-red-400">{errors.date.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="weight-val" className="text-xs">Weight (kg)</Label>
+                <Input
+                  id="weight-val"
+                  type="number"
+                  step="0.1"
+                  placeholder="88.5"
+                  data-testid="input-weight"
+                  {...register("weight")}
+                  className="bg-secondary border-border"
+                />
+                {errors.weight && <p className="text-xs text-red-400">{errors.weight.message}</p>}
+              </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="weight-val" className="text-xs">Weight (kg)</Label>
-              <Input
-                id="weight-val"
-                type="number"
-                step="0.1"
-                placeholder="88.5"
-                data-testid="input-weight"
-                {...register("weight")}
-                className="bg-secondary border-border"
-              />
-              {errors.weight && <p className="text-xs text-red-400">{errors.weight.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="waist-val" className="text-xs">Waist (cm, optional)</Label>
-              <Input
-                id="waist-val"
-                type="number"
-                step="0.5"
-                placeholder="87"
-                data-testid="input-waist"
-                {...register("waist")}
-                className="bg-secondary border-border"
+              <Label htmlFor="weight-notes" className="text-xs">How you look & feel (optional)</Label>
+              <Textarea
+                id="weight-notes"
+                placeholder="Feeling leaner, abs more visible..."
+                data-testid="input-notes"
+                {...register("notes")}
+                className="bg-secondary border-border min-h-[80px]"
               />
             </div>
-            <div className="col-span-1 sm:col-span-3 flex gap-3">
+            <div className="flex gap-3">
               <Button type="submit" data-testid="button-submit-weight" disabled={addMutation.isPending} size="sm">
                 {addMutation.isPending ? "Saving..." : "Save Entry"}
               </Button>
@@ -204,9 +206,9 @@ export default function WeightPage() {
         {/* Progress bar */}
         <div className="mb-4">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>94 kg</span>
+            <span>{start} kg</span>
             <span className="text-primary font-medium">{progressPct}% complete</span>
-            <span>84 kg</span>
+            <span>{goal} kg</span>
           </div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div
@@ -233,7 +235,7 @@ export default function WeightPage() {
               axisLine={false}
             />
             <Tooltip content={<WeightTooltip />} />
-            <ReferenceLine y={WEIGHT_TARGET} stroke="hsl(142,70%,45%)" strokeDasharray="4 4" label={{ value: "Goal 84kg", position: "insideRight", fontSize: 9, fill: "hsl(142,70%,45%)" }} />
+            <ReferenceLine y={goal} stroke="hsl(142,70%,45%)" strokeDasharray="4 4" label={{ value: `Goal ${goal}kg`, position: "insideRight", fontSize: 9, fill: "hsl(142,70%,45%)" }} />
             <Line type="monotone" dataKey="Projected" stroke="hsl(220,10%,35%)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} animationDuration={800} />
             <Line type="monotone" dataKey="Actual" stroke="hsl(186,90%,42%)" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} animationDuration={1000} />
           </LineChart>
@@ -264,12 +266,12 @@ export default function WeightPage() {
                   className="flex items-center justify-between px-5 py-3 hover:bg-secondary/30 transition-colors"
                   data-testid={`weight-row-${log.id}`}
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-muted-foreground w-24">{format(parseISO(log.date), "EEE, MMM d")}</span>
+                  <div className="flex items-center gap-4 min-w-0">
+                    <span className="text-sm text-muted-foreground w-24 flex-shrink-0">{format(parseISO(log.date), "EEE, MMM d")}</span>
                     <span className="text-sm font-semibold text-foreground tabular-nums">{log.weight} kg</span>
-                    {log.waist && <span className="text-xs text-muted-foreground">{log.waist} cm waist</span>}
+                    {log.notes && <span className="text-xs text-muted-foreground truncate max-w-[200px]" title={log.notes}>{log.notes}</span>}
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     {diff !== null && (
                       <span className={`text-xs font-medium tabular-nums ${diff < 0 ? "text-green-400" : diff > 0 ? "text-red-400" : "text-muted-foreground"}`}>
                         {diff < 0 ? "↓" : diff > 0 ? "↑" : "→"} {Math.abs(diff).toFixed(1)} kg
