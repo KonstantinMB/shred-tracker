@@ -82,16 +82,16 @@ function WorkoutCalendar({ logs }: { logs: WorkoutLog[] }) {
   if (week.length) { while (week.length < 7) week.push(null); grid.push(week); }
 
   return (
-    <div data-testid="workout-heatmap">
-      <div className="grid grid-cols-7 gap-1 mb-1">
+    <div data-testid="workout-heatmap" className="max-w-[280px]">
+      <div className="grid grid-cols-7 gap-0.5 mb-0.5">
         {weekHeaders.map((h) => (
-          <div key={h} className="text-center text-xs text-muted-foreground">{h}</div>
+          <div key={h} className="text-center text-[10px] text-muted-foreground">{h}</div>
         ))}
       </div>
       {grid.map((week, wi) => (
-        <div key={wi} className="grid grid-cols-7 gap-1 mb-1">
+        <div key={wi} className="grid grid-cols-7 gap-0.5 mb-0.5">
           {week.map((d, di) => {
-            if (!d) return <div key={di} className="w-full aspect-square rounded" />;
+            if (!d) return <div key={di} className="w-8 h-8 rounded" />;
             const dateStr = format(d, "yyyy-MM-dd");
             const workout = workoutByDate[dateStr];
             const isToday = format(today, "yyyy-MM-dd") === dateStr;
@@ -99,18 +99,18 @@ function WorkoutCalendar({ logs }: { logs: WorkoutLog[] }) {
               <div
                 key={di}
                 title={workout ? `${typeLabels[workout.type]} — ${workout.durationMin}min` : format(d, "MMM d")}
-                className={`w-full aspect-square rounded flex items-center justify-center text-xs font-medium transition-all duration-150
+                className={`w-8 h-8 rounded flex items-center justify-center transition-all duration-150
                   ${workout ? `${typeBg[workout.type]}/20 border ${typeBorder[workout.type]}` : "bg-muted/40 border border-border/30"}
                   ${isToday ? "ring-1 ring-primary ring-offset-1 ring-offset-background" : ""}
                 `}
               >
-                {workout && <div className={`w-2 h-2 rounded-full ${typeBg[workout.type]}`} />}
+                {workout && <div className={`w-1.5 h-1.5 rounded-full ${typeBg[workout.type]}`} />}
               </div>
             );
           })}
         </div>
       ))}
-      <div className="flex gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+      <div className="flex gap-3 mt-1.5 text-[10px] text-muted-foreground flex-wrap">
         {WORKOUT_TYPES.map((t) => (
           <div key={t} className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${typeBg[t]}`} />
@@ -434,7 +434,7 @@ export default function WorkoutsPage() {
             {editingWorkoutId ? "Edit Workout Session" : "New Workout Session"}
           </h2>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Date</Label>
                 <Input type="date" data-testid="input-workout-date" {...register("date")} className="bg-secondary border-border" />
@@ -493,8 +493,8 @@ export default function WorkoutsPage() {
                 </div>
                 {exerciseRows.map((row, i) => (
                   <div key={i} className="rounded-lg border border-border p-3 space-y-2 bg-secondary/30">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2 flex-1 min-w-[180px]">
+                    <div className="flex items-end justify-between gap-3 flex-wrap">
+                      <div className="flex items-end gap-2 flex-1 min-w-[180px]">
                         <div className="space-y-1 flex-1">
                           <Label className="text-xs">Exercise</Label>
                           <Select
@@ -523,7 +523,6 @@ export default function WorkoutsPage() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="mt-6"
                           onClick={() => { setCreateExerciseForRow(i); setShowCreateExercise(true); }}
                         >
                           + New
@@ -532,9 +531,9 @@ export default function WorkoutsPage() {
                       <Button type="button" variant="ghost" size="sm" onClick={() => setExerciseRows((prev) => prev.filter((_, j) => j !== i))}>Remove</Button>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <Label className="text-xs">Sets (reps × weight per set)</Label>
-                        <Button type="button" variant="ghost" size="sm" onClick={() => addSet(i)}>+ Add set</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => addSet(i)}>+ Add set</Button>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
                         {row.sets.map((set, si) => (
@@ -571,7 +570,7 @@ export default function WorkoutsPage() {
                 ))}
               </div>
             )}
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap pt-1">
               <Button type="submit" data-testid="button-submit-workout" disabled={addMutation.isPending || updateMutation.isPending} size="sm">
                 {addMutation.isPending || updateMutation.isPending ? "Saving..." : editingWorkoutId ? "Save Changes" : "Save Session"}
               </Button>
@@ -589,7 +588,7 @@ export default function WorkoutsPage() {
                   <CheckCircle2 className="w-4 h-4" /> End Workout
                 </Button>
               )}
-              <Button type="button" variant="ghost" size="sm" onClick={() => { setShowForm(false); setEditingWorkoutId(null); setExerciseRows([]); }}>Cancel</Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => { setShowForm(false); setEditingWorkoutId(null); setExerciseRows([]); }}>Cancel</Button>
             </div>
           </form>
         </div>
