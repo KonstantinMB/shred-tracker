@@ -83,6 +83,9 @@ function MacroBar({ label, value, target, color, unit = "g" }: { label: string; 
 export default function NutritionPage() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash.includes("showForm=1")) setShowForm(true);
+  }, []);
   const { targets } = useProfile();
 
   const { data: logs = [], isLoading } = useQuery<NutritionLog[]>({ queryKey: ["/api/nutrition"] });
@@ -157,9 +160,9 @@ export default function NutritionPage() {
     : null;
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+    <div className="w-full min-w-0 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between fade-slide-up pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 fade-slide-up pt-1">
         <div>
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Utensils className="w-5 h-5 text-primary" /> Nutrition Tracker
@@ -178,7 +181,7 @@ export default function NutritionPage() {
         <div className="glow-border rounded-xl bg-card p-5 fade-slide-up" data-testid="nutrition-form">
           <h2 className="text-sm font-semibold text-foreground mb-4">New Nutrition Entry</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 [&>div]:min-w-0">
               <div className="space-y-1.5">
                 <Label className="text-xs">Date</Label>
                 <Input type="date" data-testid="input-nutrition-date" {...register("date")} className="bg-secondary border-border" />
@@ -197,7 +200,7 @@ export default function NutritionPage() {
                 <Input type="number" placeholder="240" data-testid="input-carbs" {...register("carbs")} className="bg-secondary border-border" />
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 [&>div]:min-w-0">
               <div className="space-y-1.5">
                 <Label className="text-xs">Fat (g)</Label>
                 <Input type="number" placeholder="78" data-testid="input-fat" {...register("fat")} className="bg-secondary border-border" />
@@ -385,7 +388,7 @@ export default function NutritionPage() {
       )}
 
       {/* Log table */}
-      <div className="glow-border rounded-xl bg-card overflow-hidden fade-slide-up stagger-5" data-testid="nutrition-table">
+      <div className="glow-border rounded-xl bg-card overflow-hidden fade-slide-up stagger-5 min-w-0" data-testid="nutrition-table">
         <div className="px-5 py-4 border-b border-border">
           <h2 className="text-sm font-semibold text-foreground">Nutrition Log</h2>
         </div>

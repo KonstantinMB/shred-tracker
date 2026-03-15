@@ -76,8 +76,11 @@ function SidebarContent({
     {/* Logo */}
     <div className="px-6 py-5 border-b border-border">
       <div className="flex items-center gap-3">
-        <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 flex-shrink-0 overflow-hidden">
-          <img src="/shred-logo.svg" alt="Shred Tracker" className="w-6 h-6 object-contain" />
+        <div className="relative flex items-center justify-center min-w-[32px] w-9 h-9 rounded-xl bg-primary/10 flex-shrink-0 overflow-hidden">
+          <picture>
+            <source srcSet="/shred-logo.svg" type="image/svg+xml" />
+            <img src="/shred-logo.png" alt="Shred Tracker" className="w-6 h-6 object-contain" />
+          </picture>
         </div>
         <div>
           <div className="text-sm font-bold text-foreground leading-tight">SUMMER SHRED</div>
@@ -133,17 +136,20 @@ export default function Sidebar() {
       </aside>
 
       {/* ── Mobile top bar ── */}
-      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-card border-b border-border flex items-center justify-between px-4 z-50">
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 overflow-hidden">
-            <img src="/shred-logo.svg" alt="Shred Tracker" className="w-5 h-5 object-contain" />
+      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-card border-b border-border flex items-center justify-between px-4 pl-[max(1rem,env(safe-area-inset-left))] z-50">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="relative flex items-center justify-center min-w-[32px] w-8 h-8 flex-shrink-0 rounded-lg bg-primary/10 overflow-hidden">
+            <picture>
+              <source srcSet="/shred-logo.svg" type="image/svg+xml" />
+              <img src="/shred-logo.png" alt="Shred Tracker" className="w-5 h-5 object-contain" />
+            </picture>
           </div>
-          <span className="text-sm font-bold text-foreground">SUMMER SHRED</span>
+          <span className="text-sm font-bold text-foreground truncate max-w-[140px] sm:max-w-none">SUMMER SHRED</span>
         </div>
         <button
           data-testid="mobile-menu-button"
           onClick={() => setMobileOpen(true)}
-          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex-shrink-0"
           aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />

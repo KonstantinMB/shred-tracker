@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
@@ -48,6 +48,9 @@ function WeightTooltip({ active, payload, label }: any) {
 export default function WeightPage() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash.includes("showForm=1")) setShowForm(true);
+  }, []);
   const { weightTargets } = useProfile();
   const { start, goal, months } = weightTargets;
   const totalDays = months * 30;
@@ -102,9 +105,9 @@ export default function WeightPage() {
   const progressPct = latestWeight ? Math.round(((start - latestWeight) / (start - goal)) * 100) : 0;
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+    <div className="w-full min-w-0 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between fade-slide-up pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 fade-slide-up pt-1">
         <div>
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Scale className="w-5 h-5 text-primary" /> Weight Tracker
@@ -175,7 +178,7 @@ export default function WeightPage() {
       )}
 
       {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 [&>div]:min-w-0">
         {[
           { label: "Lost so far", value: `${lostKg} kg`, icon: TrendingDown, color: "text-green-400" },
           { label: "Current weight", value: latestWeight ? `${latestWeight} kg` : "—", icon: Scale, color: "text-primary" },
@@ -195,9 +198,9 @@ export default function WeightPage() {
 
       {/* Chart */}
       <div className="glow-border rounded-xl bg-card p-5 fade-slide-up stagger-2" data-testid="weight-trend-chart">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <h2 className="text-sm font-semibold text-foreground">Weight Trend</h2>
-          <div className="flex gap-4 text-xs text-muted-foreground">
+          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 bg-primary rounded" />Actual</div>
             <div className="flex items-center gap-1.5"><div className="w-3 h-0.5 border-t border-dashed border-muted-foreground" />Projected</div>
           </div>

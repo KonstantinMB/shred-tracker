@@ -13,6 +13,7 @@ import {
   Cell,
 } from "recharts";
 import { format, subDays, parseISO, isToday, isThisWeek } from "date-fns";
+import { Link } from "wouter";
 import {
   Scale,
   Flame,
@@ -53,7 +54,7 @@ function KpiCard({
 }) {
   return (
     <div
-      className={`glow-border rounded-xl bg-card p-5 fade-slide-up ${delay ?? ""}`}
+      className={`glow-border rounded-xl bg-card p-5 fade-slide-up min-w-0 ${delay ?? ""}`}
       data-testid={`kpi-${title.toLowerCase().replace(/\s+/g, "-")}`}
     >
       <div className="flex items-start justify-between">
@@ -214,7 +215,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-6xl mx-auto">
+    <div className="w-full min-w-0 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="fade-slide-up pt-1">
         <h1 className="text-xl font-bold text-foreground">Good evening, {profile.name || "there"}</h1>
@@ -223,8 +224,27 @@ export default function Dashboard() {
         </p>
       </div>
 
+      {/* Quick log */}
+      <div className="flex flex-wrap gap-2 fade-slide-up">
+        <Link href="/weight?showForm=1">
+          <a className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
+            <Scale className="w-4 h-4" /> Log Weight
+          </a>
+        </Link>
+        <Link href="/nutrition?showForm=1">
+          <a className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
+            <Flame className="w-4 h-4" /> Log Nutrition
+          </a>
+        </Link>
+        <Link href="/workouts?showForm=1">
+          <a className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
+            <Dumbbell className="w-4 h-4" /> Log Workout
+          </a>
+        </Link>
+      </div>
+
       {/* KPI grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 [&>div]:min-w-0">
         <KpiCard
           title="Current Weight"
           value={latestWeight ?? "—"}
@@ -267,8 +287,8 @@ export default function Dashboard() {
       </div>
 
       {/* Progress to goal */}
-      <div className="glow-border rounded-xl bg-card p-5 fade-slide-up stagger-2" data-testid="progress-goal">
-        <div className="flex items-center justify-between mb-3">
+      <div className="glow-border rounded-xl bg-card p-5 fade-slide-up stagger-2 min-w-0" data-testid="progress-goal">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold text-foreground">Progress to Goal</span>
@@ -281,7 +301,7 @@ export default function Dashboard() {
             style={{ width: `${Math.min(progressPct, 100)}%` }}
           />
         </div>
-        <div className="flex justify-between text-xs text-muted-foreground mt-2">
+        <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground mt-2">
           <span>Start: {WEIGHT_START} kg</span>
           <span className="text-foreground font-medium">
             {latestWeight ? `${(latestWeight - WEIGHT_TARGET).toFixed(1)} kg to go` : "—"}
@@ -293,12 +313,13 @@ export default function Dashboard() {
       {/* Weight chart + macros */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* Weight trend */}
-        <div className="lg:col-span-2 glow-border rounded-xl bg-card p-5 fade-slide-up stagger-3" data-testid="weight-chart">
-          <div className="flex items-center justify-between mb-4">
+        <div className="lg:col-span-2 glow-border rounded-xl bg-card p-5 fade-slide-up stagger-3 min-w-0" data-testid="weight-chart">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h2 className="text-sm font-semibold text-foreground">Weight Trend</h2>
             <span className="text-xs text-muted-foreground">Last 28 days</span>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
+          <div className="h-[180px] sm:h-[220px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,10%,15%)" />
               <XAxis
@@ -337,7 +358,8 @@ export default function Dashboard() {
               />
             </LineChart>
           </ResponsiveContainer>
-          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+          </div>
+          <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5"><div className="w-4 h-0.5 bg-primary" />Actual</div>
             <div className="flex items-center gap-1.5"><div className="w-4 h-0.5 border-t border-dashed border-border" />Projected</div>
             <div className="flex items-center gap-1.5"><div className="w-4 h-0.5 bg-green-400 border-dashed" />Goal: {WEIGHT_TARGET} kg</div>
@@ -382,8 +404,8 @@ export default function Dashboard() {
       </div>
 
       {/* This week training */}
-      <div className="glow-border rounded-xl bg-card p-5 fade-slide-up stagger-5" data-testid="week-training">
-        <div className="flex items-center justify-between mb-4">
+      <div className="glow-border rounded-xl bg-card p-5 fade-slide-up stagger-5 min-w-0" data-testid="week-training">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div className="flex items-center gap-2">
             <Dumbbell className="w-4 h-4 text-primary" />
             <h2 className="text-sm font-semibold text-foreground">This Week's Training</h2>
@@ -426,7 +448,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 fade-slide-up stagger-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 fade-slide-up stagger-6 [&>div]:min-w-0">
         {[
           { label: "Lost so far", value: latestWeight ? `${(WEIGHT_START - latestWeight).toFixed(1)} kg` : "—", icon: TrendingDown, color: "text-green-400" },
           { label: "Total workouts", value: workoutLogs.length, icon: Dumbbell, color: "text-primary" },

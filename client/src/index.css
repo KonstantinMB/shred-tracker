@@ -83,6 +83,8 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    min-width: 0;
     /* Mobile optimizations */
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
@@ -91,10 +93,16 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
     min-height: 100dvh;
+    overflow-x: hidden;
+    min-width: 0;
     /* Prevent overscroll bounce on mobile */
     overscroll-behavior-y: none;
     /* Better font rendering on mobile */
     text-rendering: optimizeLegibility;
+  }
+  #root {
+    min-width: 0;
+    overflow-x: hidden;
   }
 
   /* Optimize touch interactions */

@@ -117,9 +117,9 @@ export default function StrengthPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+    <div className="w-full min-w-0 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between fade-slide-up pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 fade-slide-up pt-1">
         <div>
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" /> Strength Tracker
@@ -163,11 +163,11 @@ export default function StrengthPage() {
       </div>
 
       {/* PR cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 [&>div]:min-w-0">
         {exerciseStats.map(({ exercise, color, current, gained }) => (
           <div
             key={exercise.id}
-            className="glow-border rounded-xl bg-card p-5 fade-slide-up flex flex-col"
+            className="glow-border rounded-xl bg-card p-5 fade-slide-up flex flex-col min-w-0"
             data-testid={`pr-card-${exercise.id}`}
           >
             <div className="flex items-start justify-between mb-3">

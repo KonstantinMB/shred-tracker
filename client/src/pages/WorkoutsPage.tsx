@@ -125,6 +125,9 @@ function WorkoutCalendar({ logs }: { logs: WorkoutLog[] }) {
 export default function WorkoutsPage() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash.includes("showForm=1")) setShowForm(true);
+  }, []);
   const [editingWorkoutId, setEditingWorkoutId] = useState<number | null>(null);
   const [selectedType, setSelectedType] = useState<string>("gym");
   const [exerciseRows, setExerciseRows] = useState<ExerciseRow[]>([]);
@@ -415,8 +418,8 @@ export default function WorkoutsPage() {
   const avgEnergy = logs.filter((l) => l.energyRating).reduce((s, l, _, arr) => s + (l.energyRating ?? 0) / arr.length, 0);
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between fade-slide-up pt-1">
+    <div className="w-full min-w-0 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 fade-slide-up pt-1">
         <div>
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Dumbbell className="w-5 h-5 text-primary" /> Workouts
@@ -654,7 +657,7 @@ export default function WorkoutsPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 [&>div]:min-w-0">
         {[
           { label: "Total sessions", value: totalWorkouts, icon: Dumbbell, color: "text-primary" },
           { label: "Total hours", value: `${Math.round(totalMinutes / 60)}h`, icon: Clock, color: "text-warning" },
@@ -678,7 +681,7 @@ export default function WorkoutsPage() {
         <WorkoutCalendar logs={logs} />
       </div>
 
-      <div className="glow-border rounded-xl bg-card overflow-hidden fade-slide-up stagger-3" data-testid="workouts-table">
+      <div className="glow-border rounded-xl bg-card overflow-hidden fade-slide-up stagger-3 min-w-0" data-testid="workouts-table">
         <div className="px-5 py-4 border-b border-border">
           <h2 className="text-sm font-semibold text-foreground">Session History</h2>
         </div>

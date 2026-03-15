@@ -95,7 +95,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-3xl mx-auto">
+    <div className="w-full min-w-0 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-3xl mx-auto">
       <div className="fade-slide-up pt-1">
         <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
           <User className="w-5 h-5 text-primary" /> Profile & Settings
@@ -108,7 +108,7 @@ export default function ProfilePage() {
       <form onSubmit={handleSubmit(onSubmit)} className="glow-border rounded-xl bg-card p-5 space-y-6 fade-slide-up">
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-4">Program & Weight Goals</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 [&>div]:min-w-0">
             <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>
               <Input id="name" {...register("name")} className="bg-secondary border-border" />
@@ -170,7 +170,7 @@ export default function ProfilePage() {
 
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-4">Other Targets</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 [&>div]:min-w-0">
             <div className="space-y-1.5">
               <Label htmlFor="stepsTarget">Steps</Label>
               <Input id="stepsTarget" type="number" {...register("stepsTarget")} className="bg-secondary border-border" />
