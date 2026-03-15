@@ -34,6 +34,7 @@
     --ring: 186 90% 42%;
 
     --radius: 0.5rem;
+    --ring-offset-background: hsl(220 14% 6%);
 
     /* Semantic colors */
     --success: 142 70% 45%;
@@ -196,6 +197,30 @@
   background: hsl(var(--card)) !important;
   border: 1px solid hsl(var(--border)) !important;
   border-radius: 8px !important;
+}
+
+/* Consistent hover/focus — no white backgrounds */
+[data-radix-popper-content-wrapper],
+[data-state="open"] {
+  --tw-bg-opacity: 1;
+}
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-context-menu-content] {
+  background-color: hsl(var(--popover)) !important;
+}
+[data-radix-select-item]:hover,
+[data-radix-select-item]:focus,
+[data-radix-dropdown-menu-item]:hover,
+[data-radix-dropdown-menu-item]:focus {
+  background-color: hsl(var(--secondary)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+button[data-variant="ghost"]:hover,
+.ghost:hover,
+[class*="ghost"]:hover {
+  background-color: hsl(var(--secondary)) !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 /* Tag badges */

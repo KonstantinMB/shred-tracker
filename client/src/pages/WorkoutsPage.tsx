@@ -183,7 +183,7 @@ export default function WorkoutsPage() {
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { date: format(new Date(), "yyyy-MM-dd"), type: "gym", durationMin: 60, energyRating: 7 },
+    defaultValues: { date: format(new Date(), "yyyy-MM-dd"), type: "gym", durationMin: 100, energyRating: 7 },
   });
 
   const onSubmit = (data: FormValues) => addMutation.mutate({ ...data, exerciseRows: selectedType === "gym" ? exerciseRows : [] });

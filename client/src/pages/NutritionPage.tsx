@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
@@ -24,6 +24,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import type { NutritionLog } from "@shared/schema";
 
+// Calories = protein*4 + carbs*4 + fat*9 (kcal per gram)
+const CAL_PER_G_PROTEIN = 4;
+const CAL_PER_G_CARBS = 4;
+const CAL_PER_G_FAT = 9;
+
 const formSchema = z.object({
   date: z.string().min(1, "Date required"),
   calories: z.coerce.number().min(0).max(6000),
@@ -35,6 +40,10 @@ const formSchema = z.object({
   sleep: z.coerce.number().min(0).max(14).optional(),
 });
 type FormValues = z.infer<typeof formSchema>;
+
+function calcCalories(protein: number, carbs: number, fat: number) {
+  return Math.round(protein * CAL_PER_G_PROTEIN + carbs * CAL_PER_G_CARBS + fat * CAL_PER_G_FAT);
+}
 
 function NutritionTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
@@ -98,7 +107,7 @@ export default function NutritionPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/nutrition"] }),
   });
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       date: format(new Date(), "yyyy-MM-dd"),
@@ -106,6 +115,14 @@ export default function NutritionPage() {
       steps: targets.steps, water: targets.water, sleep: targets.sleep,
     },
   });
+
+  const protein = watch("protein");
+  const carbs = watch("carbs");
+  const fat = watch("fat");
+  useEffect(() => {
+    const cal = calcCalories(Number(protein) || 0, Number(carbs) || 0, Number(fat) || 0);
+    if (cal > 0) setValue("calories", cal);
+  }, [protein, carbs, fat, setValue]);
 
   const onSubmit = (data: FormValues) => addMutation.mutate(data);
 
@@ -167,9 +184,9 @@ export default function NutritionPage() {
                 <Input type="date" data-testid="input-nutrition-date" {...register("date")} className="bg-secondary border-border" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Calories (kcal)</Label>
-                <Input type="number" placeholder="2500" data-testid="input-calories" {...register("calories")} className="bg-secondary border-border" />
-                {errors.calories && <p className="text-xs text-red-400">{errors.calories.message}</p>}
+                <Label className="text-xs">Calories (kcal) — auto from macros</Label>
+                <Input type="number" placeholder="2500" data-testid="input-calories" {...register("calories")} className="bg-secondary border-border" readOnly tabIndex={-1} />
+                <p className="text-[10px] text-muted-foreground">Protein×4 + Carbs×4 + Fat×9</p>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Protein (g)</Label>
