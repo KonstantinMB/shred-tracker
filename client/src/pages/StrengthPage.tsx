@@ -222,7 +222,7 @@ export default function StrengthPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,10%,15%)" />
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} />
-              <Tooltip content={<StrengthTooltip />} />
+              <Tooltip content={<StrengthTooltip />} wrapperStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.3)" }} />
               <Legend wrapperStyle={{ fontSize: 11, color: "hsl(210,10%,55%)" }} />
               {exercises.map((ex, i) => (
                 <Line

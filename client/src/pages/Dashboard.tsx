@@ -315,7 +315,7 @@ export default function Dashboard() {
                 axisLine={false}
                 tickFormatter={(v) => `${v}`}
               />
-              <Tooltip content={<WeightTooltip />} />
+              <Tooltip content={<WeightTooltip />} wrapperStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.3)" }} />
               <ReferenceLine y={WEIGHT_TARGET} stroke="hsl(142,70%,45%)" strokeDasharray="4 4" strokeWidth={1} label={{ value: "Goal", position: "right", fontSize: 9, fill: "hsl(142,70%,45%)" }} />
               <Line
                 type="monotone"

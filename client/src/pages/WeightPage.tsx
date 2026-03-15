@@ -234,7 +234,7 @@ export default function WeightPage() {
               tickLine={false}
               axisLine={false}
             />
-            <Tooltip content={<WeightTooltip />} />
+            <Tooltip content={<WeightTooltip />} wrapperStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.3)" }} />
             <ReferenceLine y={goal} stroke="hsl(142,70%,45%)" strokeDasharray="4 4" label={{ value: `Goal ${goal}kg`, position: "insideRight", fontSize: 9, fill: "hsl(142,70%,45%)" }} />
             <Line type="monotone" dataKey="Projected" stroke="hsl(220,10%,35%)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} animationDuration={800} />
             <Line type="monotone" dataKey="Actual" stroke="hsl(186,90%,42%)" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} animationDuration={1000} />

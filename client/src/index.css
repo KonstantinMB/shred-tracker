@@ -192,11 +192,13 @@
   background: hsl(var(--primary) / 0.08);
 }
 
-/* Chart tooltip override */
-.recharts-tooltip-wrapper .recharts-default-tooltip {
+/* Chart tooltip override — no white backgrounds */
+.recharts-tooltip-wrapper .recharts-default-tooltip,
+.recharts-tooltip-wrapper {
   background: hsl(var(--card)) !important;
   border: 1px solid hsl(var(--border)) !important;
   border-radius: 8px !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 /* Consistent hover/focus — no white backgrounds */

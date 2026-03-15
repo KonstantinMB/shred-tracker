@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,11 +27,15 @@ const formSchema = z.object({
 });
 type FormValues = z.infer<typeof formSchema>;
 
+function calcCalories(protein: number, carbs: number, fat: number) {
+  return Math.round(protein * 4 + carbs * 4 + fat * 9);
+}
+
 export default function ProfilePage() {
   const { profile, updateProfile, isUpdating } = useProfile();
   const { toast } = useToast();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: profile?.name ?? "Konstantin",
@@ -67,6 +72,14 @@ export default function ProfilePage() {
         }
       : undefined,
   });
+
+  const proteinTarget = watch("proteinTarget");
+  const carbsTarget = watch("carbsTarget");
+  const fatTarget = watch("fatTarget");
+  useEffect(() => {
+    const cal = calcCalories(Number(proteinTarget) || 0, Number(carbsTarget) || 0, Number(fatTarget) || 0);
+    if (cal > 0) setValue("caloriesTarget", cal);
+  }, [proteinTarget, carbsTarget, fatTarget, setValue]);
 
   const onSubmit = (data: FormValues) => {
     updateProfile(
@@ -132,8 +145,9 @@ export default function ProfilePage() {
           <h2 className="text-sm font-semibold text-foreground mb-4">Nutrition Targets</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="caloriesTarget">Calories (kcal)</Label>
-              <Input id="caloriesTarget" type="number" {...register("caloriesTarget")} className="bg-secondary border-border" />
+              <Label htmlFor="caloriesTarget">Calories (kcal) — auto from macros</Label>
+              <Input id="caloriesTarget" type="number" readOnly {...register("caloriesTarget")} className="bg-secondary border-border cursor-not-allowed" />
+              <p className="text-xs text-muted-foreground">Protein×4 + Carbs×4 + Fat×9</p>
               {errors.caloriesTarget && <p className="text-xs text-red-400">{errors.caloriesTarget.message}</p>}
             </div>
             <div className="space-y-1.5">

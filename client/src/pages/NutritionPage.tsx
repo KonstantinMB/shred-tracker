@@ -269,7 +269,7 @@ export default function NutritionPage() {
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,10%,15%)" vertical={false} />
             <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} />
             <YAxis tick={{ fontSize: 10, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} domain={[0, 3200]} />
-            <Tooltip content={<NutritionTooltip />} />
+            <Tooltip content={<NutritionTooltip />} wrapperStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.3)" }} />
             <ReferenceLine y={targets.calories} stroke="hsl(38,90%,55%)" strokeDasharray="4 4" label={{ value: "Target", position: "right", fontSize: 9, fill: "hsl(38,90%,55%)" }} />
             <Bar dataKey="Calories" radius={[4, 4, 0, 0]} animationDuration={800}>
               {chartData.map((entry, i) => (
@@ -295,7 +295,7 @@ export default function NutritionPage() {
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,10%,15%)" vertical={false} />
             <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} />
             <YAxis tick={{ fontSize: 10, fill: "hsl(210,10%,55%)" }} tickLine={false} axisLine={false} />
-            <Tooltip content={<NutritionTooltip />} />
+            <Tooltip content={<NutritionTooltip />} wrapperStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.3)" }} />
             <Bar dataKey="Protein" fill="hsl(186,90%,42%)" radius={[2, 2, 0, 0]} animationDuration={800} />
             <Bar dataKey="Carbs" fill="hsl(262,83%,68%)" radius={[2, 2, 0, 0]} animationDuration={800} />
             <Bar dataKey="Fat" fill="hsl(0,72%,51%)" radius={[2, 2, 0, 0]} animationDuration={800} />
@@ -331,6 +331,7 @@ export default function NutritionPage() {
                     </div>
                   ) : null
                 }
+                wrapperStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.3)" }}
               />
               <ReferenceLine y={targets.sleep} stroke="hsl(38,90%,55%)" strokeDasharray="4 4" />
               <Bar dataKey="Sleep" fill="hsl(262,83%,68%)" radius={[4, 4, 0, 0]} animationDuration={800} />
