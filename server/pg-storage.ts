@@ -78,8 +78,14 @@ export class PgStorage implements IStorage {
       sets: log.sets ?? 1,
       reps: log.reps ?? null,
       weight: log.weight ?? null,
+      setsData: log.setsData ?? null,
       notes: log.notes ?? null,
     }).returning();
+    return row;
+  }
+  async updateExerciseLog(id: number, log: Partial<InsertExerciseLog>): Promise<ExerciseLog> {
+    const [row] = await this.db.update(exerciseLogs).set(log).where(eq(exerciseLogs.id, id)).returning();
+    if (!row) throw new Error("Not found");
     return row;
   }
   async deleteExerciseLog(id: number): Promise<void> {
@@ -104,6 +110,11 @@ export class PgStorage implements IStorage {
   }
   async addWorkoutLog(log: InsertWorkoutLog): Promise<WorkoutLog> {
     const [row] = await this.db.insert(workoutLogs).values(log).returning();
+    return row;
+  }
+  async updateWorkoutLog(id: number, log: Partial<InsertWorkoutLog>): Promise<WorkoutLog> {
+    const [row] = await this.db.update(workoutLogs).set(log).where(eq(workoutLogs.id, id)).returning();
+    if (!row) throw new Error("Not found");
     return row;
   }
   async deleteWorkoutLog(id: number): Promise<void> {

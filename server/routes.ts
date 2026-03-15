@@ -68,6 +68,11 @@ export async function registerRoutes(httpServer: Server, app: Express) {
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
     res.json(await getStorage().addExerciseLog(parsed.data));
   });
+  app.patch("/api/exercise-logs/:id", async (req, res) => {
+    const parsed = insertExerciseLogSchema.partial().safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    res.json(await getStorage().updateExerciseLog(Number(req.params.id), parsed.data));
+  });
   app.delete("/api/exercise-logs/:id", async (req, res) => {
     await getStorage().deleteExerciseLog(Number(req.params.id));
     res.json({ ok: true });
@@ -95,6 +100,11 @@ export async function registerRoutes(httpServer: Server, app: Express) {
     const parsed = insertWorkoutLogSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
     res.json(await getStorage().addWorkoutLog(parsed.data));
+  });
+  app.patch("/api/workouts/:id", async (req, res) => {
+    const parsed = insertWorkoutLogSchema.partial().safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    res.json(await getStorage().updateWorkoutLog(Number(req.params.id), parsed.data));
   });
   app.delete("/api/workouts/:id", async (req, res) => {
     await getStorage().deleteWorkoutLog(Number(req.params.id));

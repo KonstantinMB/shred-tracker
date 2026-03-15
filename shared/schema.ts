@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, real, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, real, text, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -37,6 +37,7 @@ export const workoutLogs = pgTable("workout_logs", {
   durationMin: integer("duration_min").notNull(), // minutes
   energyRating: integer("energy_rating"), // 1-10
   notes: text("notes"),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
 });
 
 // Daily nutrition logs
@@ -60,6 +61,9 @@ export const exercises = pgTable("exercises", {
   unit: text("unit").notNull().default("kg"), // kg, reps, time
 });
 
+// Per-set: { reps?: number, weight?: number }[]
+export type SetData = { reps?: number; weight?: number }[];
+
 // Exercise logs — per-workout exercise data (sets, reps, weight)
 export const exerciseLogs = pgTable("exercise_logs", {
   id: serial("id").primaryKey(),
@@ -68,6 +72,7 @@ export const exerciseLogs = pgTable("exercise_logs", {
   sets: integer("sets").notNull().default(1),
   reps: integer("reps"),
   weight: real("weight"),
+  setsData: jsonb("sets_data").$type<SetData>(), // [{reps, weight}, ...] per set
   notes: text("notes"),
 });
 

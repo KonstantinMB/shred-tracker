@@ -39,6 +39,9 @@ export async function apiRequest(
         return { ok: true } as Response;
       } else if (method === "POST" && url === "/api/workouts") {
         result = await api.addWorkoutLog(payload);
+      } else if (method === "PATCH" && url.match(/^\/api\/workouts\/\d+$/)) {
+        const id = Number(url.split("/").pop());
+        result = await api.updateWorkoutLog(id, payload);
       } else if (method === "DELETE" && url.startsWith("/api/workouts/")) {
         await api.deleteWorkoutLog(Number(url.split("/").pop()));
         return { ok: true } as Response;
@@ -49,6 +52,9 @@ export async function apiRequest(
         return { ok: true } as Response;
       } else if (method === "POST" && url === "/api/exercise-logs") {
         result = await api.addExerciseLog(payload);
+      } else if (method === "PATCH" && url.match(/^\/api\/exercise-logs\/\d+$/)) {
+        const id = Number(url.split("/").pop());
+        result = await api.updateExerciseLog(id, payload);
       } else if (method === "DELETE" && url.startsWith("/api/exercise-logs/")) {
         await api.deleteExerciseLog(Number(url.split("/").pop()));
         return { ok: true } as Response;

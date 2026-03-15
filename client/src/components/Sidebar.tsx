@@ -76,23 +76,8 @@ function SidebarContent({
     {/* Logo */}
     <div className="px-6 py-5 border-b border-border">
       <div className="flex items-center gap-3">
-        <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 flex-shrink-0">
-          <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-label="Shred Tracker">
-            <path
-              d="M12 2C12 2 7 7 7 12.5C7 15.54 9.24 18 12 18C14.76 18 17 15.54 17 12.5C17 10 15 8 15 8C15 8 14.5 10 13 10.5C13 10.5 14 8.5 12 2Z"
-              fill="hsl(186,90%,42%)"
-            />
-            <path
-              d="M12 14C12 14 10 13 10 11.5C10 10.5 10.8 9.5 10.8 9.5C10.8 9.5 11 11 12 11.5C13 12 13.5 11 13.5 11C13.5 11 14 12.5 13 13.5C12.5 14 12 14 12 14Z"
-              fill="hsl(38,90%,55%)"
-            />
-            <path
-              d="M9 18C9 19.1 9.9 20 11 20H13C14.1 20 15 19.1 15 18"
-              stroke="hsl(186,90%,42%)"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
+        <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 flex-shrink-0 overflow-hidden">
+          <img src="/shred-logo.svg" alt="Shred Tracker" className="w-6 h-6 object-contain" />
         </div>
         <div>
           <div className="text-sm font-bold text-foreground leading-tight">SUMMER SHRED</div>
@@ -150,11 +135,8 @@ export default function Sidebar() {
       {/* ── Mobile top bar ── */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-card border-b border-border flex items-center justify-between px-4 z-50">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-            <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
-              <path d="M12 2C12 2 7 7 7 12.5C7 15.54 9.24 18 12 18C14.76 18 17 15.54 17 12.5C17 10 15 8 15 8C15 8 14.5 10 13 10.5C13 10.5 14 8.5 12 2Z" fill="hsl(186,90%,42%)" />
-              <path d="M12 14C12 14 10 13 10 11.5C10 10.5 10.8 9.5 10.8 9.5C10.8 9.5 11 11 12 11.5C13 12 13.5 11 13.5 11C13.5 11 14 12.5 13 13.5C12.5 14 12 14 12 14Z" fill="hsl(38,90%,55%)" />
-            </svg>
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 overflow-hidden">
+            <img src="/shred-logo.svg" alt="Shred Tracker" className="w-5 h-5 object-contain" />
           </div>
           <span className="text-sm font-bold text-foreground">SUMMER SHRED</span>
         </div>

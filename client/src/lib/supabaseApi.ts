@@ -121,6 +121,13 @@ export async function addWorkoutLog(log: Record<string, unknown>) {
   return toCamel(data);
 }
 
+export async function updateWorkoutLog(id: number, updates: Record<string, unknown>) {
+  const sb = await ensureSupabase();
+  const { data, error } = await sb.from("workout_logs").update(toSnake(updates)).eq("id", id).select().single();
+  if (error) throw new Error(error.message);
+  return toCamel(data);
+}
+
 export async function deleteWorkoutLog(id: number) {
   const sb = await ensureSupabase();
   const { error } = await sb.from("workout_logs").delete().eq("id", id);
@@ -161,6 +168,13 @@ export async function getExerciseLogs(workoutId?: number) {
 export async function addExerciseLog(log: Record<string, unknown>) {
   const sb = await ensureSupabase();
   const { data, error } = await sb.from("exercise_logs").insert(toSnake(log)).select().single();
+  if (error) throw new Error(error.message);
+  return toCamel(data);
+}
+
+export async function updateExerciseLog(id: number, updates: Record<string, unknown>) {
+  const sb = await ensureSupabase();
+  const { data, error } = await sb.from("exercise_logs").update(toSnake(updates)).eq("id", id).select().single();
   if (error) throw new Error(error.message);
   return toCamel(data);
 }

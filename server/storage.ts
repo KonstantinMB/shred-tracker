@@ -17,6 +17,7 @@ export interface IStorage {
   // Exercise logs (per-workout)
   getExerciseLogs(workoutId?: number): Promise<ExerciseLog[]>;
   addExerciseLog(log: InsertExerciseLog): Promise<ExerciseLog>;
+  updateExerciseLog(id: number, log: Partial<InsertExerciseLog>): Promise<ExerciseLog>;
   deleteExerciseLog(id: number): Promise<void>;
 
   // Weight
@@ -27,6 +28,7 @@ export interface IStorage {
   // Workout
   getWorkoutLogs(): Promise<WorkoutLog[]>;
   addWorkoutLog(log: InsertWorkoutLog): Promise<WorkoutLog>;
+  updateWorkoutLog(id: number, log: Partial<InsertWorkoutLog>): Promise<WorkoutLog>;
   deleteWorkoutLog(id: number): Promise<void>;
 
   // Nutrition
@@ -102,9 +104,15 @@ export class MemStorage implements IStorage {
     return list.sort((a, b) => a.id - b.id);
   }
   async addExerciseLog(log: InsertExerciseLog): Promise<ExerciseLog> {
-    const entry = { ...log, id: this.nextId++, sets: log.sets ?? 1, reps: log.reps ?? null, weight: log.weight ?? null, notes: log.notes ?? null };
+    const entry = { ...log, id: this.nextId++, sets: log.sets ?? 1, reps: log.reps ?? null, weight: log.weight ?? null, setsData: log.setsData ?? null, notes: log.notes ?? null };
     this.exerciseLogs.push(entry);
     return entry;
+  }
+  async updateExerciseLog(id: number, log: Partial<InsertExerciseLog>): Promise<ExerciseLog> {
+    const idx = this.exerciseLogs.findIndex((e) => e.id === id);
+    if (idx === -1) throw new Error("Not found");
+    this.exerciseLogs[idx] = { ...this.exerciseLogs[idx], ...log };
+    return this.exerciseLogs[idx];
   }
   async deleteExerciseLog(id: number): Promise<void> {
     this.exerciseLogs = this.exerciseLogs.filter((e) => e.id !== id);
@@ -188,9 +196,15 @@ export class MemStorage implements IStorage {
 
   async getWorkoutLogs() { return [...this.workoutLogs].sort((a, b) => b.date.localeCompare(a.date)); }
   async addWorkoutLog(log: InsertWorkoutLog): Promise<WorkoutLog> {
-    const entry = { ...log, id: this.getId(), energyRating: log.energyRating ?? null, notes: log.notes ?? null };
+    const entry = { ...log, id: this.getId(), energyRating: log.energyRating ?? null, notes: log.notes ?? null, finishedAt: null };
     this.workoutLogs.push(entry);
     return entry;
+  }
+  async updateWorkoutLog(id: number, log: Partial<InsertWorkoutLog>): Promise<WorkoutLog> {
+    const idx = this.workoutLogs.findIndex((l) => l.id === id);
+    if (idx === -1) throw new Error("Not found");
+    this.workoutLogs[idx] = { ...this.workoutLogs[idx], ...log };
+    return this.workoutLogs[idx];
   }
   async deleteWorkoutLog(id: number) { this.workoutLogs = this.workoutLogs.filter(l => l.id !== id); }
 
