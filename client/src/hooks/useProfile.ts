@@ -21,13 +21,8 @@ const DEFAULT_PROFILE: UserProfile = {
 };
 
 export function useProfile() {
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading } = useQuery<UserProfile | null>({
     queryKey: ["/api/profile"],
-    queryFn: async () => {
-      const res = await fetch("/api/profile");
-      const data = await res.json();
-      return data as UserProfile | null;
-    },
   });
 
   const updateMutation = useMutation({

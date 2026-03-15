@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import * as api from "@/lib/supabaseApi";
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, getDay, subMonths } from "date-fns";
 import { Plus, Trash2, Dumbbell, Clock, Zap } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -121,6 +122,29 @@ export default function WorkoutsPage() {
 
   const addMutation = useMutation({
     mutationFn: async (data: FormValues & { exerciseRows?: { exerciseId: number; sets: number; reps: number; weight: number }[] }) => {
+      if (api.hasSupabase()) {
+        const workout = await api.addWorkoutLog({
+          date: data.date,
+          type: data.type,
+          durationMin: data.durationMin,
+          energyRating: data.energyRating ?? null,
+          notes: data.notes ?? null,
+        });
+        if (data.type === "gym" && data.exerciseRows?.length) {
+          for (const row of data.exerciseRows) {
+            if (row.exerciseId && (row.reps || row.weight)) {
+              await api.addExerciseLog({
+                workoutId: workout.id,
+                exerciseId: row.exerciseId,
+                sets: row.sets || 1,
+                reps: row.reps || null,
+                weight: row.weight || null,
+              });
+            }
+          }
+        }
+        return workout;
+      }
       const res = await fetch("/api/workouts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

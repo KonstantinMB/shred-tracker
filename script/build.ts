@@ -60,24 +60,7 @@ async function buildAll() {
     logLevel: "info",
   });
 
-  // Bundle Vercel API function so server/routes and deps are included
-  console.log("building Vercel API...");
-  await esbuild({
-    entryPoints: ["script/api-entry.ts"],
-    platform: "node",
-    bundle: true,
-    format: "esm",
-    outfile: "api/index.js",
-    define: {
-      "process.env.NODE_ENV": '"production"',
-    },
-    minify: true,
-    external: externals,
-    logLevel: "info",
-    alias: {
-      "@shared/schema": "./shared/schema.ts",
-    },
-  });
+  // API no longer built — frontend uses Supabase client directly
 }
 
 buildAll().catch((err) => {
