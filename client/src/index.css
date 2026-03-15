@@ -200,6 +200,11 @@
   border-radius: 8px !important;
   color: hsl(var(--foreground)) !important;
 }
+/* Chart hover cursor (rectangle behind bars on hover) */
+.recharts-tooltip-cursor,
+.recharts-rectangle.recharts-tooltip-cursor {
+  fill: hsl(var(--secondary)) !important;
+}
 
 /* Consistent hover/focus — no white backgrounds */
 [data-radix-popper-content-wrapper],
