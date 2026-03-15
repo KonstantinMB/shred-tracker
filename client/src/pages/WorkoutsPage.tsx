@@ -139,7 +139,11 @@ export default function WorkoutsPage() {
   const { data: logs = [], isLoading } = useQuery<WorkoutLog[]>({ queryKey: ["/api/workouts"] });
   const { data: exercises = [], refetch: refetchExercises } = useQuery<Exercise[]>({ queryKey: ["/api/exercises"] });
   const { data: exerciseLogs = [] } = useQuery<ExerciseLog[]>({ queryKey: ["/api/exercise-logs"] });
-  const sortedLogs = [...logs].sort((a, b) => b.date.localeCompare(a.date));
+  const sortedLogs = [...logs].sort((a, b) => {
+    const dateCmp = b.date.localeCompare(a.date);
+    if (dateCmp !== 0) return dateCmp;
+    return (b.id ?? 0) - (a.id ?? 0); // same date: newest first by id
+  });
 
   const addMutation = useMutation({
     mutationFn: async (data: FormValues & { exerciseRows?: ExerciseRow[] }) => {
