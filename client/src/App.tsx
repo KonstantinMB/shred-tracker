@@ -3,6 +3,7 @@ import { useHashLocation } from "wouter/use-hash-location";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
+import { SupabaseConfigBanner } from "@/components/SupabaseConfigBanner";
 import Sidebar from "@/components/Sidebar";
 import Dashboard from "@/pages/Dashboard";
 import WeightPage from "@/pages/WeightPage";
@@ -15,6 +16,7 @@ import NotFound from "@/pages/not-found";
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <SupabaseConfigBanner />
       <Router hook={useHashLocation}>
         <div className="flex min-h-screen bg-background">
           <Sidebar />
